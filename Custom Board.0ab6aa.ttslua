@@ -1,0 +1,641 @@
+function onload()
+    color = "Green"
+    button_setup("START", self.guid, 'button_to_startPlay', 8000, 8000, 800, 0, 0,  {0,0,0}, {1,1,1,0.8})
+  end
+  
+  -- Функция для кнопки старта на доске
+  function button_to_startPlay()  
+    for i=0 ,#self.getButtons()-1 do self.removeButton(i) end
+    button_setup("Русский", self.guid, 'chooseLanguageRus', 8000, 4000, 800, 0, 4.13,  {0,0,0}, {1,1,1,0.8})
+    button_setup("English", self.guid, 'chooseLanguageEng', 8000, 4000, 800, 0, -4.13,  {0,0,0}, {1,1,1,0.8})  
+  end
+  
+  -- Функция выбора языка
+  function chooseLanguageRus() language = false afterChooseLanguage() end
+  function chooseLanguageEng() language = true  afterChooseLanguage() end
+  
+  function afterChooseLanguage() 
+    for i=0 ,#self.getButtons()-1 do self.removeButton(i) end
+    fetchScriptAreaData()
+    fetchData(color, language)
+    createAll()
+  end
+  
+  -- Настройка кнопки, которая будет как настройка на доске
+  function button_setup(label, guid, function_name, width, height, font_size, x, z, inputColor, fontColor)
+    local button = getObjectFromGUID(guid)
+    if button == nil then
+      print("Button '", label, "' does not exist, skipping it...")
+      return
+    end
+    local button_parameters = {
+      click_function = function_name,
+      label = label,
+      function_owner = self,
+      position = { x, 0.6, z },
+      snap = false,
+      width = width,
+      height = height,
+      font_size = font_size,
+      color = inputColor,
+      font_color = fontColor
+    }
+    button.createButton(button_parameters)    
+    return button
+  end
+  
+  -- Все данные
+  function fetchData(color, en_state)
+    playerColor = color
+    enLanguage = en_state
+  
+    -- Русский / Англ текст
+    if enLanguage then
+      labelVillageTrue = "Income (Y):"
+      labelVillageFalse = "Income (No):"
+      labelJail = "Losses:"
+      labelTotal = "Total:"
+      labelInput = "Enter another value..."
+  
+      errorMessage1 = "This is not your board - Income - "
+      errorMessage2 = "This is not your board - Total - "
+      errorMessage3 = "Value error - Input - "
+      errorMessage4 = "Player set a new value - Total="
+      errorMessage5 = "This is not your board - Input - "
+    else
+      labelVillageTrue = "Доход (Да):"
+      labelVillageFalse = "Доход (Нет):"
+      labelJail = "Потери:"
+      labelTotal = "Итого:"
+      labelInput = "Введите иное значение..."
+  
+      errorMessage1 = "Этой не твоя доска - Доход - "
+      errorMessage2 = "Этой не твоя доска - Итог - "
+      errorMessage3 = "Превысил допустимое значение - Input - "
+      errorMessage4 = "Ввел новое значение - Итог="
+      errorMessage5 = "Этой не твоя доска - Input - "
+    end
+  
+    colorForButton = {
+      Red = {208/255, 45/255, 52/255},
+      Blue = {80/255, 172/255, 221/255},
+      Purple = {169/255, 37/255, 187/255},
+      Green = {76/255, 209/255, 42/255},
+      Orange = {211/255,131/255,32/255},
+      Yellow = {218/255,205/255,31/255},
+      Pink = {244/255,110/255,205/255}
+    }
+  
+    buttonParams = {
+      function_owner = self,
+      label = labelVillageTrue .. "\n\n0",
+      tooltip = "1",
+      rotation = {0,0,0},
+      width = 580,
+      height = 530,
+      font_size = 95,
+      font_color = {255, 255, 255, 1},
+      color = {0,0,0,0.8}
+    }
+  
+    buttonTotalSum = {
+      click_function = "TotalButtonClicked",
+      function_owner = self,
+      label = labelTotal .. " 0",
+      tooltip = labelTotal .. " 0",
+      rotation = {0,0,0},
+      width = 1930,
+      height = 620,
+      font_size = 300,
+      font_color = {1,1,1,0.8},
+      position = {4.13,0.6,7.04},
+      color = colorForButton[color]
+    }
+  
+    inputTotalSum = {
+      input_function = "TotalInputClicked",
+      function_owner = self,
+      label = labelInput,
+      tooltip = labelInput,
+      rotation = {0,0,0},
+      width = 1920,
+      height = 130,
+      font_size = 90,
+      font_color = {1,1,1,95},
+      position = {4.13,0.6,7.8},
+      color = {255,255,255,0.5},
+      validation = 2,
+      alignment = 3
+  }
+  
+    redButton = copyTable(buttonParams)
+    redButton.position = {7.35,0.6,-3.23}
+    redButton.click_function = "redClicked"
+  
+    orangeButton = copyTable(buttonParams)
+    orangeButton.position = {7.35,0.6,-1.5}
+    orangeButton.click_function = "orangeClicked"
+  
+    purpleButton = copyTable(buttonParams)
+    purpleButton.position = {7.35,0.6,0.23}
+    purpleButton.click_function = "purpleClicked"
+  
+    greenButton = copyTable(buttonParams)
+    greenButton.position = {7.35,0.6,1.96}
+    greenButton.click_function = "greenClicked"
+  
+    blueButton = copyTable(buttonParams)
+    blueButton.position = {7.35,0.6,3.69}
+    blueButton.click_function = "blueClicked"
+  
+    yellowButton = copyTable(buttonParams)
+    yellowButton.position = {7.35,0.6,5.42}
+    yellowButton.click_function = "yellowClicked"
+  
+    jailButton = copyTable(buttonParams)
+    jailButton.position = {7.35,0.6,-6.34}
+    jailButton.click_function = "jailClicked"
+    jailButton.label = labelJail .. "\n\n0"  
+  end
+
+  -- Данные script зон
+  function fetchScriptAreaData()
+    local currPosition = self.getPosition() 
+  
+    scriptAreas = {
+        type = "ScriptingTrigger",
+        scale = {28.17, 0.5, 3.32}
+    }
+  
+    jailScriptArea = copyTable(scriptAreas)
+    jailScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z + 13.57}
+    jailScriptArea.scale = {28.16, 0.5, 7.03}
+  
+    rScriptArea = copyTable(scriptAreas)
+    rScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z + 6.88}
+    
+    oScriptArea = copyTable(scriptAreas)
+    oScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z + 3.17}
+    
+    pScriptArea = copyTable(scriptAreas)
+    pScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z - 0.54}
+    
+    gScriptArea = copyTable(scriptAreas)
+    gScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z - 4.25}
+    
+    bScriptArea = copyTable(scriptAreas)
+    bScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z - 7.96}
+    
+    yScriptArea = copyTable(scriptAreas)
+    yScriptArea.position = {currPosition.x - 1.77, 1.35, currPosition.z - 11.67}    
+  
+    zoneScoreScriptArea = copyTable(scriptAreas)
+    zoneScoreScriptArea.position = {currPosition.x + 2.54, 1.35, currPosition.z - 15.42}
+    zoneScoreScriptArea.scale = {2.34, 0.5, 3.33}  
+  end
+
+  -- Данные snap points
+  function createSnapPoints()
+    self.setSnapPoints({
+      -- jail 1
+      {position = {7.33,  1,  -7.18}, rotation_snap = true},
+      {position = {5.90,  1,  -7.18}, rotation_snap = true},
+      {position = {4.47,  1,  -7.18}, rotation_snap = true},
+      {position = {3.04,  1,  -7.18}, rotation_snap = true},
+      {position = {1.603, 1,  -7.18}, rotation_snap = true},
+      {position = {0.177, 1,  -7.18}, rotation_snap = true},
+      {position = {-1.27, 1,  -7.18}, rotation_snap = true},
+      {position = {-2.70, 1,  -7.18}, rotation_snap = true},
+      {position = {-4.13, 1,  -7.18}, rotation_snap = true},
+      {position = {-5.565,1,  -7.18}, rotation_snap = true},
+
+      -- jail 2
+      {position = {7.33,  1,  -5.46}, rotation_snap = true},
+      {position = {5.90,  1,  -5.46}, rotation_snap = true},
+      {position = {4.47,  1,  -5.46}, rotation_snap = true},
+      {position = {3.04,  1,  -5.46}, rotation_snap = true},
+      {position = {1.603, 1,  -5.46}, rotation_snap = true},
+      {position = {0.177, 1,  -5.46}, rotation_snap = true},
+      {position = {-1.27, 1,  -5.46}, rotation_snap = true},
+      {position = {-2.70, 1,  -5.46}, rotation_snap = true},
+      {position = {-4.13, 1,  -5.46}, rotation_snap = true},
+      {position = {-5.565,1,  -5.46}, rotation_snap = true},
+      
+      -- red
+      {position = {7.33,  1,  -3.21}, rotation_snap = true},
+      {position = {5.90,  1,  -3.21}, rotation_snap = true},
+      {position = {4.47,  1,  -3.21}, rotation_snap = true},
+      {position = {3.04,  1,  -3.21}, rotation_snap = true},
+      {position = {1.603, 1,  -3.21}, rotation_snap = true},
+      {position = {0.177, 1,  -3.21}, rotation_snap = true},
+      {position = {-1.27, 1,  -3.21}, rotation_snap = true},
+      {position = {-2.70, 1,  -3.21}, rotation_snap = true},
+      {position = {-4.13, 1,  -3.21}, rotation_snap = true},
+      {position = {-5.565,1,  -3.21}, rotation_snap = true},
+      
+      -- orange
+      {position = {7.33,  1,  -1.49}, rotation_snap = true},
+      {position = {5.90,  1,  -1.49}, rotation_snap = true},
+      {position = {4.47,  1,  -1.49}, rotation_snap = true},
+      {position = {3.04,  1,  -1.49}, rotation_snap = true},
+      {position = {1.603, 1,  -1.49}, rotation_snap = true},
+      {position = {0.177, 1,  -1.49}, rotation_snap = true},
+      {position = {-1.27, 1,  -1.49}, rotation_snap = true},
+      {position = {-2.70, 1,  -1.49}, rotation_snap = true},
+      {position = {-4.13, 1,  -1.49}, rotation_snap = true},
+      {position = {-5.565,1,  -1.49}, rotation_snap = true},
+      
+      -- purple
+      {position = {7.33,  1,  0.25}, rotation_snap = true},
+      {position = {5.90,  1,  0.25}, rotation_snap = true},
+      {position = {4.47,  1,  0.25}, rotation_snap = true},
+      {position = {3.04,  1,  0.25}, rotation_snap = true},
+      {position = {1.603, 1,  0.25}, rotation_snap = true},
+      {position = {0.177, 1,  0.25}, rotation_snap = true},
+      {position = {-1.27, 1,  0.25}, rotation_snap = true},
+      {position = {-2.70, 1,  0.25}, rotation_snap = true},
+      {position = {-4.13, 1,  0.25}, rotation_snap = true},
+      {position = {-5.565,1,  0.25}, rotation_snap = true},
+      
+      -- green
+      {position = {7.33,  1,  1.96}, rotation_snap = true},
+      {position = {5.90,  1,  1.96}, rotation_snap = true},
+      {position = {4.47,  1,  1.96}, rotation_snap = true},
+      {position = {3.04,  1,  1.96}, rotation_snap = true},
+      {position = {1.603, 1,  1.96}, rotation_snap = true},
+      {position = {0.177, 1,  1.96}, rotation_snap = true},
+      {position = {-1.27, 1,  1.96}, rotation_snap = true},
+      {position = {-2.70, 1,  1.96}, rotation_snap = true},
+      {position = {-4.13, 1,  1.96}, rotation_snap = true},
+      {position = {-5.565,1,  1.96}, rotation_snap = true},
+      
+      --blue
+      {position = {7.33,  1,  3.70}, rotation_snap = true},
+      {position = {5.90,  1,  3.70}, rotation_snap = true},
+      {position = {4.47,  1,  3.70}, rotation_snap = true},
+      {position = {3.04,  1,  3.70}, rotation_snap = true},
+      {position = {1.603, 1,  3.70}, rotation_snap = true},
+      {position = {0.177, 1,  3.70}, rotation_snap = true},
+      {position = {-1.27, 1,  3.70}, rotation_snap = true},
+      {position = {-2.70, 1,  3.70}, rotation_snap = true},
+      {position = {-4.13, 1,  3.70}, rotation_snap = true},
+      {position = {-5.565,1,  3.70}, rotation_snap = true},
+      
+      -- yellow
+      {position = {7.33,  1,  5.43}, rotation_snap = true},
+      {position = {5.90,  1,  5.43}, rotation_snap = true},
+      {position = {4.47,  1,  5.43}, rotation_snap = true},
+      {position = {3.04,  1,  5.43}, rotation_snap = true},
+      {position = {1.603, 1,  5.43}, rotation_snap = true},
+      {position = {0.177, 1,  5.43}, rotation_snap = true},
+      {position = {-1.27, 1,  5.43}, rotation_snap = true},
+      {position = {-2.70, 1,  5.43}, rotation_snap = true},
+      {position = {-4.13, 1,  5.43}, rotation_snap = true},
+      {position = {-5.565,1,  5.43}, rotation_snap = true},
+      
+      -- wars + cost
+      {position = {4.47,  1,  7.17}, rotation_snap = true},
+      {position = {1.603, 1,  7.17}, rotation_snap = true},
+      {position = {-1.27, 1,  7.17}, rotation_snap = true},
+    })
+  end
+
+  function createAll()
+    createSnapPoints()
+
+    self.createButton(redButton)    -- 0
+    self.createButton(orangeButton) -- 1
+    self.createButton(purpleButton) -- 2
+    self.createButton(greenButton)  -- 3
+    self.createButton(blueButton)   -- 4
+    self.createButton(yellowButton) -- 5
+    self.createButton(jailButton)   -- 6
+  
+    self.createButton(buttonTotalSum) -- 7
+    self.createInput(inputTotalSum)   -- 8
+  
+    jArea = spawnObject(jailScriptArea)
+    rArea = spawnObject(rScriptArea)
+    oArea = spawnObject(oScriptArea)
+    pArea = spawnObject(pScriptArea)
+    gArea = spawnObject(gScriptArea)
+    bArea = spawnObject(bScriptArea)
+    yArea = spawnObject(yScriptArea)  
+    zone_score = spawnObject(zoneScoreScriptArea)  
+  
+    -- Создание скрит зон для деревень
+    Wait.frames(function()
+      jArea = jArea.guid
+      rArea = rArea.guid
+      oArea = oArea.guid
+      pArea = pArea.guid
+      gArea = gArea.guid
+      bArea = bArea.guid
+      yArea = yArea.guid
+      zone_score = zone_score.guid
+    end, 10)
+  
+    Wait.frames(function()
+      local playerColorsInGame = {"Red","Blue","Purple","Green"}
+      guidBoards = {"961225", "311c83", "e654ae", "0ab6aa"}
+  
+      for i = 0, #playerColorsInGame do
+        if playerColorsInGame[i] == playerColor then
+          table.remove(guidBoards, i)
+          break
+        end
+      end
+  
+      indexArea = {
+        n0 = rArea,  n1 = oArea,
+        n2 = pArea,  n3 = gArea,
+        n4 = bArea,  n5 = yArea,
+        n6 = jArea,
+      }
+    end, 11)
+  end
+  
+  -- Если карта попала в зону деревень
+  function detectZoneCards(zone, object)
+    if zone == zone_score then return end
+    local val = getTotalMoneyInZone(zone)
+    local currIndex = -1
+    local status = true
+  
+    for i, j in pairs(indexArea) do
+      if j == zone then
+        currIndex = tonumber(string.sub(tostring(i), 2, 2))
+        break
+      end
+    end
+  
+    for i, btn in pairs(self.getButtons()) do
+      if i-1 == index then
+        if btn.tooltip == "1" then
+          status = true
+        else
+          status = false
+        end
+      end
+    end
+    updateVal(currIndex, status, tostring(val))
+  end
+  
+  -- Если карта попала в зону Jail
+  function detectJailCards(zone, object)
+    local counter = 0
+  
+    local zone = getObjectFromGUID(zone)
+    local objInZone = zone.getObjects()
+  
+    for _, obj in pairs(objInZone) do
+      -- money
+      if obj.getVar("money") ~= nil then
+        counter = counter + obj.getVar("money")       
+      end
+    end
+    updateVal(6, "1", tostring(counter))
+  end
+  
+  -- Объекты попадают в зону
+  function onObjectEnterScriptingZone(zone, object)
+    Wait.frames(function()
+      local arrayArea = {jArea, rArea, oArea, pArea, gArea, bArea, yArea}
+      for i,v in ipairs(arrayArea) do
+        if v == jArea then
+          detectJailCards(v, object)
+        else
+          detectZoneCards(v, object)
+        end
+      end
+    end, 5)
+  end
+  
+  -- Объекты покидают зоны
+  function onObjectLeaveScriptingZone(zone, object)
+    Wait.frames(function()
+      local arrayArea = {jArea, rArea, oArea, pArea, gArea, bArea, yArea}
+      for i,v in ipairs(arrayArea) do
+        if v == jArea then
+          detectJailCards(v, object)
+        else
+          detectZoneCards(v, object)
+        end
+      end
+    end, 5)
+  end
+  
+  -- Функция копирования таблиц
+  function copyTable(table)
+    local res = {}
+    for i, j in pairs(table) do res[i] = j end
+    return res
+  end
+  
+  -- Функция вызывается после клика по - Да/Нет
+  function editStatus(index, playerColorClicked)    
+    if playerColorClicked == playerColor then
+      local clickstatus = true
+      for i, btn in pairs(self.getButtons()) do
+        if i-1 == index then
+          if btn.tooltip == "1" then
+            clickstatus = false
+          else
+            clickstatus = true
+          end
+          local val = getTotalMoneyInZone(indexArea["n"..index])
+          updateVal(index, clickstatus, tostring(val))
+          break
+        end
+      end
+    else
+      print(errorMessage1,playerColorClicked)
+    end
+  end
+  
+  -- Обновить значения кнопок - Да/Нет
+  function updateVal(indexValue, status, val)
+    if indexValue > 6 then return end
+    local newLabel = status and labelVillageTrue .. "\n\n" .. val or labelVillageFalse .. "\n\n" .. val
+    local newTooltip = status and "1" or "0"
+    if indexValue == 6 then newLabel = labelJail .. "\n\n" .. val end
+    self.editButton({
+      index = indexValue,
+      label = newLabel,
+      tooltip = newTooltip
+    })
+  end  
+  
+  -- Обновить значение кнопки Итого
+  function updateTotalSum(val, indexValue)
+    local newLabel = labelTotal .. " " .. val
+    local newTooltip = labelTotal .. " " .. val
+    self.editButton({
+      index = indexValue,
+      label = newLabel,
+      tooltip = newTooltip
+    })
+  end  
+  
+  -- Обработка кнопкок Да/Нет
+  function redClicked(obj, playerColor, alt_click) editStatus(0, playerColor) end
+  function orangeClicked(obj, playerColor, alt_click) editStatus(1, playerColor) end
+  function purpleClicked(obj, playerColor, alt_click) editStatus(2, playerColor) end
+  function greenClicked(obj, playerColor, alt_click) editStatus(3, playerColor) end
+  function blueClicked(obj, playerColor, alt_click) editStatus(4, playerColor) end
+  function yellowClicked(obj, playerColor, alt_click) editStatus(5, playerColor) end
+  function jailClicked(obj, playerColor, alt_click) return end
+  
+  -- Обработка кнопки Итого
+  function TotalButtonClicked(obj, playerColorClicked, alt_click)
+    if playerColorClicked == playerColor then
+      local sum = 0
+      local y = 0
+      local TotalValue = 0
+      local TotalButtonindex = 7
+  
+      for i, btn in pairs(self.getButtons()) do
+  
+        if i == 7 then 
+          y = tonumber(string.sub(tostring(btn.label), 9))
+          goto continue
+        end
+  
+        if i == 8 then
+          TotalValue = tonumber(string.sub(tostring(btn.label), 7))
+          TotalButtonindex = btn.index
+          break
+        end
+  
+        if btn.tooltip == "0" then goto continue end
+        sum = sum + tonumber(string.sub(tostring(btn.label), 13))
+        ::continue::
+      end
+      sum = TotalValue + sum - y
+      updateTotalSum(sum, TotalButtonindex)
+    else
+      print(errorMessage2,playerColorClicked)
+    end
+  end
+  
+  -- Обработка кнопки Input
+  function TotalInputClicked(obj, playerColorClicked, input, stillEditing)
+    if playerColorClicked == playerColor then
+      if not stillEditing then
+  
+        if #input > 5 then 
+          print(errorMessage3,playerColorClicked)
+          return "" 
+        end
+  
+        print(errorMessage4,input," - ",playerColorClicked)
+        updateTotalSum(input, 7)
+        return ""
+      end
+    else 
+      print(errorMessage5,playerColorClicked)
+      return ""
+    end
+  end
+  
+  -- Общий подсчет
+  function getTotalMoneyInZone(zone_guid)
+    local counter = 0 -- money
+    local king = false -- king
+    local castle = false
+    local farm = false
+    local boogeyman = false
+    local capitan_sparky = false
+    local kingCounter = 0
+    local farmerCounter = 0
+    local animalCount = 0
+  
+    local zone = getObjectFromGUID(zone_guid)
+    local jail = getObjectFromGUID(jArea)
+    local objInZone = zone.getObjects()
+    local jailCounter = jail.getObjects()
+  
+    enemyjail_1 = getObjectFromGUID(guidBoards[1]).getVar("jArea")
+    enemyjail_2 = getObjectFromGUID(guidBoards[2]).getVar("jArea")
+    enemyjail_3 = getObjectFromGUID(guidBoards[3]).getVar("jArea")
+  
+    --boogeyman
+    for _, obj in pairs(objInZone) do    
+      if obj.getVar("boogeyman") ~= nil then boogeyman = true end
+    end
+    
+    for _, obj in pairs(objInZone) do
+  
+      -- money
+      if obj.getVar("money") ~= nil then
+        counter = counter + obj.getVar("money") 
+        if boogeyman then counter = counter - 1 end         
+      end
+  
+      -- king
+      if obj.getVar("king") ~= nil then
+        king = true  
+        kingCounter = kingCounter + 1      
+      end
+  
+      -- animal
+      if obj.getVar("animal") ~= nil then animalCount = animalCount + 1 end
+  
+      -- princess
+      if obj.getVar("princess") ~= nil then kingCounter = kingCounter + 1  end
+  
+      -- robin
+      if obj.getVar("robin") ~= nil then
+        local objzone_score = getObjectFromGUID(zone_score)
+        local objInzone_score = objzone_score.getObjects()
+        local isLow = false
+  
+        for _, obj in pairs(objInzone_score) do
+          if not obj.getVar("score") then isLow = true end
+        end
+  
+        if isLow then counter = counter + 6 end
+      end
+  
+      --undertaker
+      if obj.getVar("undertaker") ~= nil then
+          local objenemyjail_1 = getObjectFromGUID(enemyjail_1)
+          local objenemyjail_2 = getObjectFromGUID(enemyjail_2)
+          local objenemyjail_3 = getObjectFromGUID(enemyjail_3)
+          local objInEnemyjail_1 = objenemyjail_1 == nil and 0 or #objenemyjail_1.getObjects()
+          local objInEnemyjail_2 = objenemyjail_2 == nil and 0 or #objenemyjail_2.getObjects()
+          local objInEnemyjail_3 = objenemyjail_3 == nil and 0 or #objenemyjail_3.getObjects()
+          if #jailCounter > objInEnemyjail_1 and 
+              #jailCounter > objInEnemyjail_2 and
+              #jailCounter > objInEnemyjail_3 then
+              counter = counter + 5
+              if boogeyman then counter = counter - 1 end
+          end
+      end
+  
+      --castle
+      if obj.getVar("castle") ~= nil then castle = true end
+  
+      --farm
+      if obj.getVar("farm") ~= nil then farm = true end
+  
+      --farmer
+      if obj.getVar("farmer") ~= nil then farmerCounter = farmerCounter + 1 end
+  
+      -- monk
+      if obj.getVar("monk") ~= nil then counter = counter + #jailCounter end    
+      
+      -- capitan_sparky
+      if obj.getVar("capitan_sparky") ~= nil then capitan_sparky = true end    
+  
+      -- boogeyman
+      if obj.getVar("boogeyman") then counter = counter + 1 end
+    end
+  
+    if capitan_sparky then counter = counter + animalCount end
+    if castle then counter = counter + kingCounter end 
+    if farm then counter = counter + farmerCounter*2 end
+    if king then counter = counter * 2 end
+    
+    return counter
+  end

@@ -1,0 +1,21 @@
+--[[ Lua code. See documentation: https://api.tabletopsimulator.com/ --]]
+
+
+
+--[[ The onLoad event is called after the game save finishes loading. --]]
+function onLoad()
+    --[[ print('onLoad!') --]]
+
+    -- woodTable, stoneWalls, board1, board2, board3, board4, mainBoard, boardWithCards, boardWithCards2, block
+    local mainObjects = {"fee39a", "6d6cd1", "961225", "311c83", "0ab6aa", "e654ae", "31745e", "c646ef", "b88b72", "8fbdec"}
+
+    for i = 1, #mainObjects do
+        getObjectFromGUID(mainObjects[i]).interactable = false
+    end
+end
+
+
+--[[ The onUpdate event is called once per frame. --]]
+function onUpdate()
+    --[[ print('onUpdate loop!') --]]
+end
